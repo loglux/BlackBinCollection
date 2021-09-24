@@ -1,7 +1,7 @@
 # Black Bin Collection Day in Belfast
 The scritpt takes the next Black Bin collection date information from Belfast City Hall Website
 https://dof.belfastcity.gov.uk/BinCollectionSchedulesV2/addressLookup.aspx
-
+And then publish the event in your Outlook Calendar.
 ## Requirements
 ```angular2html
 selenium
