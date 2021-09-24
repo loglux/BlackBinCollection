@@ -14,7 +14,7 @@ In short words, you must setup rights and obtain a token file o365_token.txt
  
 2. You must install chrome browser and webdirver.
 
-3. Int he blackbin.py you must point your secret keys and the 
+3. Int the blackbin.py you must point your secret keys and the 
 ```angular2html
 self.credentials = ('', '')
 ```
