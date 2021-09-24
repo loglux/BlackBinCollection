@@ -20,7 +20,7 @@ self.credentials = ('', '')
 ```
 and path to the chrome's webdriver
 ```angular2html
-self.chromepath = "C:/Users/call2/.../webdriver/chromedriver.exe"
+self.chromepath = "C:/Users/.../webdriver/chromedriver.exe"
 ```
  
 ## How Does It Work?
