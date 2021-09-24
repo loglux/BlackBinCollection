@@ -48,8 +48,8 @@ collection.remind_before_minutes = 360
 ## Usage
 The script can be installed in Linux and be stared by CRON
 For example: “At 12:00 on Tuesday and Friday.”
-``
+````angular2html
 0 12 * * 2,5 cd /opt/scripts && /usr/local/bin/pipenv run python blackbin.py >/dev/null 2>&1
-``
+````
 Here you can figure out how to use CRON
 https://crontab.guru/
