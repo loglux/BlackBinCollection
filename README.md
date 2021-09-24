@@ -24,12 +24,12 @@ self.chromepath = "C:/Users/.../webdriver/chromedriver.exe"
 ```
  
 ## How Does It Work?
-###1. You should point your address in the house = ""
+### 1. You should point your address in the house = ""
 For example:
 ```angular2html
 house = '24 Ann Street, Belfast, BT1 4EF'
 ```
-###2. You should point your calendar's name
+### 2. You should point your calendar's name
 ```angular2html
 bins.update_calendar('Events')
 ```
@@ -45,3 +45,11 @@ And chenge a notification time before the event. This settings push a reminder a
 ```angular2html
 collection.remind_before_minutes = 360
 ```
+## Usage
+The script can be installed in Linux and be stared by CRON
+For example: “At 12:00 on Tuesday and Friday.”
+``
+0 12 * * 2,5 cd /opt/scripts && /usr/local/bin/pipenv run python blackbin.py >/dev/null 2>&1
+``
+Here you can figure out how to use CRON
+https://crontab.guru/
