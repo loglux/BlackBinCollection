@@ -37,3 +37,11 @@ or leave a blank variable if you intent to use your default calendar:
 ```angular2html
 bins.update_calendar()
 ```
+You can alsoe change a subject here for your bin collection event
+```angular2html
+collection.subject = 'Bin collection'
+```
+And chenge a notification time before the event. This settings push a remander at 18:00 a day before the collection. You can change it.
+```angular2html
+collection.remind_before_minutes = 360
+```
