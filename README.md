@@ -33,7 +33,7 @@ house = '24 Ann Street, Belfast, BT1 4EF'
 ```angular2html
 bins.update_calendar('Events')
 ```
-or leave a blank variable if you intent you use your default calendar:
+or leave a blank variable if you intent to use your default calendar:
 ```angular2html
 bins.update_calendar()
 ```
