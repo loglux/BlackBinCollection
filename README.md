@@ -1,5 +1,6 @@
 # Black Bin Collection Day in Belfast
-The scritpt takes the next Black Bin collection date information from Belfast City Hall Website.
+The scritpt takes the next Black Bin collection date information from Belfast City Hall Website
+https://dof.belfastcity.gov.uk/BinCollectionSchedulesV2/addressLookup.aspx
 
 ## Requirements
 ```angular2html
