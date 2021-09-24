@@ -59,7 +59,7 @@ class BlackBin:
                 self.year = int(table[5])
                 print(table)
             except NoSuchElementException:
-                print("The Information is Is Missing From Belfast City Council Website")
+                print("The Information Is Missing From Belfast City Council Website")
                 info = self.driver.find_element_by_id("BinDetailsPnl").text
                 print(info)
                 self.get_exit()
