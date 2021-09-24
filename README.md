@@ -12,7 +12,7 @@ The process has been described on the O365 module's site https://github.com/O365
 
 In short words, you must setup rights and obtain a token file o365_token.txt
  
-2. You must install chrome browser and webdirver.
+2. You must install Chrome browser and webdirver (https://chromedriver.chromium.org/downloads).
 
 3. Int the blackbin.py you must point your secret keys and the 
 ```angular2html
