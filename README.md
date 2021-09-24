@@ -10,7 +10,7 @@ O365
 1. You must setup access righs to be able modify your Outlook Calendar.
 The process has been described on the O365 module's site https://github.com/O365/python-o365
 
-In short words, you must setup rights and obtain a token file o365_token.txt
+In short words, you must setup access rights and obtain a token file o365_token.txt
  
 2. You must install Chrome browser and webdirver (https://chromedriver.chromium.org/downloads).
 
