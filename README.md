@@ -27,7 +27,11 @@ self.chromepath = "C:/Users/.../webdriver/chromedriver.exe"
 ### 1. You should point your address in the house = ""
 For example:
 ```angular2html
-house = '24 Ann Street, Belfast, BT1 4EF'
+house = '58 London Street, Belfast, BT6 8EN'
+```
+or
+```angular2html
+house = 'Apartment 42,2 North Howard Street, Belfast, BT13 2AW'
 ```
 ### 2. You should point your calendar's name
 ```angular2html
