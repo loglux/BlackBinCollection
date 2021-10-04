@@ -41,7 +41,7 @@ or leave a blank variable if you intent to use your default calendar:
 ```angular2html
 bins.update_calendar()
 ```
-You can alsoe change a subject for your bin collection event, if you put an argument. If no argument, the subject is 'Bin collection' by default.
+You can also change a subject for your bin collection event, if you put an argument. If no argument, the subject is 'Bin collection' by default.
 ```angular2html
 bins = BlackBin('Black Bin Collection')
 ```
