@@ -1,7 +1,7 @@
 # Black Bin Collection Day in Belfast
 The scritpt takes the next Black Bin collection date information from Belfast City Hall Website
 https://dof.belfastcity.gov.uk/BinCollectionSchedulesV2/addressLookup.aspx
-And then publish the event in your Outlook Calendar.
+And then publishes the event in your Outlook Calendar.
 ## Requirements
 ```angular2html
 selenium
@@ -41,9 +41,9 @@ or leave a blank variable if you intent to use your default calendar:
 ```angular2html
 bins.update_calendar()
 ```
-You can alsoe change a subject here for your bin collection event
+You can alsoe change a subject for your bin collection event, if you put an argument. If no argument, the subject is 'Bin collection' by default.
 ```angular2html
-collection.subject = 'Bin collection'
+bins = BlackBin('Black Bin Collection')
 ```
 And chenge a notification time before the event. This settings push a reminder at 18:00 a day before the collection. You can change it.
 ```angular2html
