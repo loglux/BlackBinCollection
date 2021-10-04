@@ -11,10 +11,11 @@ from O365 import Account
 
 
 class BlackBin:
-    def __init__(self):
+    def __init__(self, event_subject='Bin collection'):
         self.options = Options()
         self.url = "https://dof.belfastcity.gov.uk/BinCollectionSchedulesV2/addressLookup.aspx"
         self.credentials = ('', '')
+        self.event_subject = event_subject
         self.year = int()
         self.month = int()
         self.day = int()
@@ -86,11 +87,11 @@ class BlackBin:
         q.chain('and').on_attribute('end').less_equal(collection_end)
         events = calendar.get_events(query=q, include_recurring=False)
         for e in events:
-            if e.subject == 'Bin collection':
+            if e.subject == self.event_subject:
                 print("The Event " + "#" + e.subject + "#" + " Is Already In The Calendar")
                 quit()
         collection = calendar.new_event()  # creates a new unsaved event
-        collection.subject = 'Bin collection'
+        collection.subject = self.event_subject
         collection.location = 'Belfast'
         collection.start = dt.datetime(self.year, self.month, self.day, 0, 0)
         collection.is_all_day = True
@@ -102,6 +103,9 @@ class BlackBin:
 if __name__ == '__main__':
     # "House_Number Street Name (like: 3 Anna Street), Belfast, POST_CODE"
     house = ""
+    # A subject of the event is 'Bin collection' by default
+    # Your can change this subject, if you put an argument here, e.g.
+    # bins = BlackBin('Black Bin Collection')
     bins = BlackBin()
     bins.start_chrome(True)
     bins.get_bin(house)
