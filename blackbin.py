@@ -35,16 +35,18 @@ class BlackBin:
         self.driver = webdriver.Chrome(executable_path=self.chromepath, options=self.options)
 
     def get_bin(self, house_address):
+        house_address = house_address.upper()
         postcode = house_address.split(', ')[2]
         self.driver.get(self.url)
         time.sleep(1)
-        self.driver.find_element_by_id("searchBy_radio_1").click()
+        self.driver.find_element_by_css_selector("label[for='searchBy_radio_1']").click()
         WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, "Postcode_textbox")))
-        self.driver.find_element_by_name("Postcode_textbox").send_keys(postcode)
+        self.driver.find_element_by_id("Postcode_textbox").send_keys(postcode)
         self.driver.find_element_by_id("AddressLookup_button").click()
         select = Select(self.driver.find_element_by_id("lstAddresses"))
         try:
             select.select_by_visible_text(house_address)
+            self.driver.find_element_by_id("SelectAddress_button").click()
             try:
                 table = self.driver.find_element_by_id("ItemsGrid").find_elements_by_tag_name("tr")[1].text
                 table = table.split(' ')
@@ -60,7 +62,7 @@ class BlackBin:
                 self.year = int(table[5])
                 print(table)
             except NoSuchElementException:
-                print("The Information Is Missing From Belfast City Council Website")
+                print("The Information is Is Missing From Belfast City Council Website")
                 info = self.driver.find_element_by_id("BinDetailsPnl").text
                 print(info)
                 self.get_exit()
@@ -105,7 +107,7 @@ if __name__ == '__main__':
     house = ""
     # A subject of the event is 'Bin collection' by default
     # Your can change this subject, if you put an argument here, e.g.
-    # bins = BlackBin('Black Bin Collection')
+    #
     bins = BlackBin()
     bins.start_chrome(True)
     bins.get_bin(house)
