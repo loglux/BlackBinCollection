@@ -13,7 +13,8 @@ from O365 import Account
 class BlackBin:
     def __init__(self, event_subject='Bin collection'):
         self.options = Options()
-        self.url = "https://dof.belfastcity.gov.uk/BinCollectionSchedulesV2/addressLookup.aspx"
+        # self.url = "https://dof.belfastcity.gov.uk/BinCollectionSchedulesV2/addressLookup.aspx"
+        self.url = "https://online.belfastcity.gov.uk/find-bin-collection-day/Default.aspx"
         self.credentials = ('', '')
         self.event_subject = event_subject
         self.year = int()
