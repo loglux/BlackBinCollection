@@ -11,22 +11,31 @@ BlackBin is a script that automates the process of checking the next Black Bin c
 
 1. Clone this repository: `git clone https://github.com/loglux/BlackBinCollection.git`
 2. Navigate to the project directory: `cd BlackBinCollection`
-3. Update the house variable in the blackbin.py script with your address. Use the following format:
-```python
-house = 'House_Number Street Name, Belfast, POST_CODE'
+3. **Configure environment variables**:
+   - Create a `.env` file in the root of the project directory.
+   - Add the following variables to the `.env` file, replacing placeholder values with your actual details:
+     ```dotenv
+     CLIENT_ID=your_client_id
+     CLIENT_SECRET=your_client_secret
+     HOUSE_ADDRESS=House_Number Street Name, Belfast, POST_CODE
+     CALENDAR_NAME=your_calendar_name
+     ```
+     For example:
+     ```dotenv
+     CLIENT_ID=12345678-abcd-1234-ef00-123456789abc
+     CLIENT_SECRET=abcd1234Efgh5678Ijkl
+     HOUSE_ADDRESS=3 Anna Street, Belfast, BT1 1AA
+     CALENDAR_NAME=MyCalendar
+     ```
+   - Ensure your `.env` file is correctly formatted and saved.
+4. **Install dependencies**:
+```bash
+pip install -r requirements.txt 
 ```
-Make sure to replace 'House_Number Street Name' with the actual house number and street name of your address, 'Belfast' with the city name, and 'POST_CODE' with the corresponding postal code.
-For example:
-```python
-house = '3 Anna Street, Belfast, BT1 1AA'
+5. **Run the script**:
+```bash
+python blackbin.py
 ```
-4. Update the credentials in the `blackbin.py` file:
-   - Replace `'your_client_id'` with your Microsoft 365 client ID.
-   - Replace `'your_client_secret'` with your Microsoft 365 client secret.
-5. Obtain an access token file 'o365_token.txt' and place it into the same directory:
-   - Follow the instructions in the [Obtaining an Access Token](#obtaining-an-access-token) section to obtain the `o365_token.txt` file.
-
-
 ## Manual Docker Container Setup
 
 If you prefer to set up the Docker containers manually, follow these steps:

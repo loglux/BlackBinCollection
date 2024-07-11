@@ -2,4 +2,5 @@ lxml
 O365
 selenium
 requests
-tzlocal~=2.1
+tzlocal
+python-dotenv
