@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import time
 from datetime import datetime, timedelta
 from O365 import Account
@@ -11,6 +13,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 class BlackBin:
     def __init__(self):
+        load_dotenv()  # Load environment variables from .env file
+        client_id = os.getenv("CLIENT_ID")
+        client_secret = os.getenv("CLIENT_SECRET")
+        self.credentials = (client_id, client_secret)
         self.options = webdriver.ChromeOptions()
         self.options.add_argument("--disable-dev-shm-usage")
         self.options.add_argument("--disable-extensions")
@@ -22,8 +28,6 @@ class BlackBin:
                      "(KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36"
         self.options.add_argument('--user-agent={}'.format(user_agent))
         self.url = "https://online.belfastcity.gov.uk/find-bin-collection-day/Default.aspx"
-        # Put your client ID and secret here:
-        self.credentials = ('your_client_id', 'your_client_secret')
         self.year = int()
         self.month = int()
         self.day = int()
@@ -97,13 +101,13 @@ class BlackBin:
         print(collection)
         collection.save()
 
-
 if __name__ == '__main__':
     # "House_Number Street Name (like: 3 Anna Street), Belfast, POST_CODE"
-    house = "<your-address-here>"
+    load_dotenv()  # Ensure environment variables are loaded
+    house = os.getenv("HOUSE_ADDRESS")
+    calendar_name = os.getenv("CALENDAR_NAME", "Events")  # Load event name from .env or use default
     bins = BlackBin()
     bins.start_chrome()
     bins.get_bin(house)
     bins.get_exit()
-    # if the argument is empty, the default calendar is chosen:
-    bins.update_calendar('Events')
+    bins.update_calendar(calendar_name)
