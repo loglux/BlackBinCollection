@@ -8,7 +8,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y cron
 
 # Copy your Python script, text file, and requirements file into the Docker image
-COPY blackbin.py o365_token.txt requirements.txt ./
+COPY blackbin.py o365_token.txt .env requirements.txt ./
 
 # Install the Python packages specified in your requirements file
 RUN pip install --no-cache-dir -r requirements.txt
