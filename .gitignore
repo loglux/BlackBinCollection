@@ -1,0 +1,53 @@
+# Secrets and tokens - NEVER commit these!
+.env*
+!.env.example
+o365_token.txt
+google_service_account.json
+fresh_token
+
+# Local helper scripts (keep local)
+auth_device_code.py
+auth_final.py
+auth_localhost.py
+bb.py
+convert_token.py
+docontainer.sh
+inject_token.py
+manual_auth.py
+refresh_final.py
+refresh_token.py
+rollback.sh
+safe_upgrade.sh
+sel.sh
+update_token.py
+
+# Docs (local only; keep README.md)
+*.md
+!/README.md
+
+# Backups
+*.backup
+backup_*/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Docker
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
