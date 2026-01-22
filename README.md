@@ -1,6 +1,6 @@
 # BlackBin - Belfast Bin Collection Tracker
 
-BlackBin automates checking the next Black Bin collection day for a Belfast address (via the Belfast City Council site), adds it to your Outlook Calendar, and can publish updates to Home Assistant (MQTT/webhook/REST).
+Automates checking the next Black Bin collection day for a Belfast address (via Belfast City Council site), adds it to your calendar (Outlook/Google), and can publish updates to Home Assistant (MQTT/webhook/REST).
 
 ## Requirements
 
@@ -9,196 +9,233 @@ BlackBin automates checking the next Black Bin collection day for a Belfast addr
 
 ## Status
 
-Working:
-- Selenium scraping (Belfast City Council)
-- Outlook Calendar (automatic token refresh)
-- MQTT -> Home Assistant (auto-discovery sensor)
+| Integration | Status |
+|-------------|--------|
+| Selenium scraping | OK |
+| Outlook Calendar | OK (automatic token refresh) |
+| MQTT | OK (Home Assistant auto-discovery) |
+| Google Calendar | OK (service account) |
+| HA Webhook | Available (disabled by default) |
+| REST API | Available (disabled by default) |
 
-Partial/optional:
-- Google Calendar (service account, disabled by default)
-- HA Webhook (disabled by default)
-- REST API (disabled by default)
-
-## Quick start (Docker)
-
-1) Copy `.env.example` to `.env` and fill in calendar credentials (Outlook/Google).
-   If you prefer configuring in the Web UI, you can add Outlook Client ID / Tenant ID there instead.
+## Quick Start (Docker)
 
 ```bash
+# 1. Copy environment template
 cp .env.example .env
+
+# 2. Start containers (choose one)
+./docker_start.sh          # host network
+./doc_start.sh             # bridge network
+
+# 3. Open Web UI
+http://<your-ip>:5050
 ```
-2) Start containers:
-   - `./docker_start.sh` (host network, Selenium at `localhost:4444`)
-   - or `./doc_start.sh` (bridge network, Selenium at `selenium-server:4444`)
-3) Run interactive setup (address + schedule + MQTT):
+
+Config is stored in `/data/blackbin_config.json` and survives container rebuilds.
+
+---
+
+## Configuration
+
+### Option 1: Web UI (recommended)
+
+Open `http://<your-ip>:5050` in a browser. All settings are available:
+
+- **Address** — postcode lookup, address selection, validation
+- **Schedule** — visual day/time picker for cron jobs
+- **MQTT** — broker, port, credentials, topic
+- **Outlook Calendar** — client ID, token generation, calendar selection
+- **Google Calendar** — upload service account JSON, calendar selection
+
+Changes are saved to `/data/blackbin_config.json` and applied immediately.
+
+### Option 2: Console (--configure)
+
+Interactive prompts for headless setup:
 
 ```bash
 docker exec -it blackbin python blackbin.py --configure
 ```
-4) Check logs:
 
-```bash
-docker logs blackbin --tail 50
+Configures: address, schedule, MQTT. Calendar settings require Web UI or `.env`.
+
+### Option 3: Environment Variables (.env)
+
+For automation (Docker Compose, Kubernetes). See `.env.example` for full list.
+
+Key variables:
+
+```dotenv
+# Outlook
+CLIENT_ID=your_client_id
+CLIENT_SECRET=your_client_secret
+TENANT_ID=common
+ENABLE_OUTLOOK=true
+
+# Google Calendar
+ENABLE_GOOGLE_CALENDAR=false
+GOOGLE_SERVICE_ACCOUNT_FILE=google_service_account.json
+GOOGLE_CALENDAR_ID=primary
+
+# MQTT
+ENABLE_MQTT=false
+MQTT_BROKER=192.168.1.10
+MQTT_PORT=1883
+MQTT_USERNAME=
+MQTT_PASSWORD=
+
+# Selenium
+SELENIUM_HOST=localhost
+SELENIUM_PORT=4444
 ```
 
-Web UI (enabled by default):
+**Precedence:** config file values override `.env`.
 
-- Host network: `http://<host-ip>:5050`
-- Bridge network: `http://<host-ip>:5050` (port mapped in `doc_start.sh`)
+---
 
-Config is stored in `/data/blackbin_config.json` (mounted via `./data:/data` in the start scripts) so it survives rebuilds.
-If you keep tokens in `/data` (recommended), you do not need to rebuild after updating them.
-If you change `.env` on the host, rebuild the image or copy the file into the running container.
+## Feature Flags
 
-## Manual Docker setup (bridge network)
+Enable/disable modules via `.env` or Web UI:
 
-```bash
-docker network create selenium-network
-docker run -d --name selenium-server --network selenium-network -p 4444:4444 -p 7900:7900 --shm-size="2g" selenium/standalone-chrome
-mkdir -p data
-docker build -t blackbin .
-docker run -d --name blackbin --network selenium-network -e SELENIUM_HOST=selenium-server -p 5050:5050 -v ./data:/data blackbin
-```
+| Flag | Default | Description |
+|------|---------|-------------|
+| `ENABLE_WEB_UI` | `true` | Web interface on port 5050 |
+| `ENABLE_OUTLOOK` | `true` | Outlook Calendar integration |
+| `ENABLE_GOOGLE_CALENDAR` | `false` | Google Calendar integration |
+| `ENABLE_MQTT` | `false` | MQTT publisher (Home Assistant) |
+| `ENABLE_HA_WEBHOOK` | `false` | Home Assistant webhook notifier |
+| `ENABLE_REST_API` | `false` | REST API endpoint |
 
-## Manual Docker setup (host network)
+Example — run with only MQTT, no calendars:
 
 ```bash
-docker run -d --name selenium-server --network host selenium/standalone-chrome
-mkdir -p data
-docker build -t blackbin .
-docker run -d --name blackbin --network host -v ./data:/data blackbin
+docker run -d --name blackbin \
+  -e ENABLE_OUTLOOK=false \
+  -e ENABLE_MQTT=true \
+  -e MQTT_BROKER=192.168.1.10 \
+  -v ./data:/data \
+  blackbin
 ```
 
-## Manual run
-
-```bash
-docker exec -it blackbin python blackbin.py --configure
-docker exec blackbin python blackbin.py
-```
-
-## Run without Docker
-
-1) Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-2) Start a Selenium server (example):
-
-```bash
-docker run -d --name selenium-server -p 4444:4444 selenium/standalone-chrome
-```
-
-3) Run interactive setup:
-
-```bash
-export CONFIG_PATH=./blackbin_config.json
-python blackbin.py --configure
-```
-
-4) Start web UI (optional):
-
-```bash
-export WEB_UI_HOST=0.0.0.0
-export WEB_UI_PORT=5050
-python web_ui.py
-```
-
-5) Run:
-
-```bash
-python blackbin.py
-```
-
-## Stop and remove containers
-
-```bash
-docker stop blackbin selenium-server
-docker rm blackbin selenium-server
-```
-
-## Schedule
-
-Default cron: Monday, Friday, Saturday at 19:30; Wednesday at 03:30 (container timezone).
-Schedules saved in the Web UI are applied immediately. If you edit `blackbin_config.json` by hand or
-use `--configure`, restart the container to re-apply cron.
-
-```bash
-docker exec blackbin crontab -l
-```
-
-Override via env (restart required):
-
-```bash
-CRON_SCHEDULES="30 19 * * 1,5,6;30 3 * * 3"
-```
-
-## Selenium endpoint
-
-`blackbin` connects to `http://<SELENIUM_HOST>:<SELENIUM_PORT>/wd/hub`.
-Defaults: `SELENIUM_HOST=localhost`, `SELENIUM_PORT=4444`.
-
-## Web UI
-
-Enabled by default. You can disable it with `ENABLE_WEB_UI=false`.
-
-Config:
-- `WEB_UI_HOST` (default `0.0.0.0`)
-- `WEB_UI_PORT` (default `5050`)
-- `WEB_UI_SECRET_KEY` (set to a fixed secret so Flask can store flash messages, defaults to a random value if unset)
-
-Access from another machine: `http://<host-ip>:5050`
-Outlook token setup is available under "Token setup / refresh" in the Outlook section.
+---
 
 ## Integrations
 
-### Active
+### Outlook Calendar
 
-| Integration | Status |
-|------------|--------|
-| Outlook Calendar | OK (automatic token refresh) |
-| MQTT | OK (sensor.black_bin_collection in HA) |
-| Selenium scraping | OK |
+**Azure Portal setup:**
 
-### Disabled by default (not tested recently)
+1. Create an app registration in [Azure Portal](https://portal.azure.com)
+2. Set supported account types (use `common` for personal accounts)
+3. Add delegated API permissions: `Calendars.ReadWrite`, `User.Read`, `offline_access`
+4. Enable "Allow public client flows" (for device code auth)
 
-| Integration | Flag in .env |
-|------------|-------------|
-| Google Calendar | ENABLE_GOOGLE_CALENDAR=false |
-| HA Webhook | ENABLE_HA_WEBHOOK=false |
-| REST API | ENABLE_REST_API=false |
+**Token generation (Web UI):**
 
-## MQTT (Home Assistant)
+1. Enter Client ID and Tenant ID in Outlook section
+2. Click "Generate token" under "Token setup / refresh"
+3. Open the verification URL, enter the code
+4. Click "Complete sign-in" — token saved to `/data/o365_token.txt`
 
-BlackBin publishes Home Assistant MQTT discovery plus state and attributes. Make sure the MQTT integration
-is configured in Home Assistant.
+**Token generation (console):**
 
-Default base topic: `homeassistant/sensor/blackbin`
-
-Topics:
-- `<base>/config` (retained) - MQTT discovery config
-- `<base>/state` (retained) - next collection date as `YYYY-MM-DD`
-- `<base>/attributes` (retained) - JSON attributes: `title`, `date`, `day_of_week`, `days_until`, `last_update` (and `date_formatted` if enabled)
-
-You can set MQTT values during `--configure` and they will be stored in the local config file.
-Manual `.env` settings are still supported.
-If you set `MQTT_STATE_FORMAT`, the state payload will use that format and an extra `date_formatted`
-attribute will be added.
-
-Example `.env`:
-
-```dotenv
-ENABLE_MQTT=true
-MQTT_BROKER=192.168.1.10
-MQTT_PORT=1883
-MQTT_USERNAME=blackbin
-MQTT_PASSWORD=secret
-MQTT_TOPIC=homeassistant/sensor/blackbin
-MQTT_STATE_FORMAT=%a %d %b
+```bash
+docker exec -it blackbin python auth_msal.py
 ```
 
-Home Assistant UI example (friendly date like "Wed 29 Jan"):
+**Calendar selection:**
+
+- Click "Fetch calendars" to load your calendars
+- Select from dropdown — ID fills automatically
+- Or leave empty for default calendar
+
+**Token lifespan:**
+
+- Access tokens expire in ~1 hour (auto-refreshed)
+- Refresh tokens last ~90 days (sliding window)
+- Re-run token flow only if refresh fails
+
+---
+
+### Google Calendar
+
+**Google Cloud setup:**
+
+1. Create a project in [Google Cloud Console](https://console.cloud.google.com)
+2. Enable Google Calendar API
+3. Create a Service Account (IAM → Service Accounts)
+4. Download JSON key, save as `google_service_account.json`
+
+**Share calendar with Service Account:**
+
+1. Find service account email in JSON file (field `client_email`):
+   ```
+   blackbin-calendar@my-project-123456.iam.gserviceaccount.com
+   ```
+2. Open [Google Calendar](https://calendar.google.com)
+3. Settings → select your calendar
+4. "Share with specific people or groups" → Add people
+5. Paste service account email
+6. Permission: **"Make changes to events"**
+7. Click Send
+
+**Calendar selection (Web UI):**
+
+1. Upload service account JSON
+2. Click "Fetch calendars"
+3. Select calendar from dropdown
+
+**Important — calendars don't appear automatically:**
+
+Shared calendars don't auto-appear in Service Account's list. If "Fetch calendars" returns empty:
+
+```bash
+docker exec blackbin python -c "
+from integrations.google_calendar import GoogleCalendar
+gc = GoogleCalendar('/data/google_service_account.json')
+calendar_id = 'YOUR_CALENDAR_ID@group.calendar.google.com'
+gc.service.calendarList().insert(body={'id': calendar_id}).execute()
+print('Calendar added!')
+"
+```
+
+Get Calendar ID: Google Calendar → Settings → Integrate calendar.
+- Custom calendars: `abc123...@group.calendar.google.com`
+- Primary calendar: `primary` or owner's email
+
+**Reminders/Notifications:**
+
+Google reminders are per-user. Service Account reminders won't notify you.
+
+Configure default notifications in your calendar:
+1. Google Calendar → Settings → your calendar
+2. "Event notifications" section
+3. Add notification (e.g., 6 hours before)
+
+---
+
+### MQTT (Home Assistant)
+
+Publishes to Home Assistant via MQTT auto-discovery.
+
+**Topics:**
+
+- `homeassistant/sensor/blackbin/config` — discovery config
+- `homeassistant/sensor/blackbin/state` — date (`YYYY-MM-DD`)
+- `homeassistant/sensor/blackbin/attributes` — JSON metadata
+
+**Setup:**
+
+1. Enable MQTT in Web UI or `.env`
+2. Set broker address, port, credentials
+3. Entity `sensor.black_bin_collection` appears in Home Assistant
+
+**Custom date format:**
+
+Set `MQTT_STATE_FORMAT` (strftime), e.g., `%a %d %b` → "Wed 29 Jan"
+
+**Home Assistant template (friendly date):**
 
 ```yaml
 template:
@@ -216,188 +253,106 @@ template:
           {% endif %}
 ```
 
-Entity card:
+---
 
-```yaml
-type: entity
-entity: sensor.black_bin_collection_friendly
-```
+## Docker Setup
 
-Replace `sensor.black_bin_collection` with your entity id if it differs.
-
-## Configuration
-
-Address, schedule, and MQTT are stored in the local config file created by `--configure`.
-Default path: `/data/blackbin_config.json` (override with `CONFIG_PATH`).
-
-Config precedence: values in `/data/blackbin_config.json` override `.env`. The UI writes to the config file.
-Set secrets in `.env` if you prefer environment-based configuration (do not commit it).
-Common settings:
-
-Minimum config (Outlook only):
-
-```dotenv
-CLIENT_ID=your_client_id
-CLIENT_SECRET=your_client_secret
-TENANT_ID=common
-ENABLE_OUTLOOK=true
-```
-
-When you are tuning the address, the Web UI now exposes a “Validate address” button (next to
-“Lookup addresses”). It fetches the Belfast City Hall lookup results (e.g. “2 Donegall Square East,
-Belfast, BT1 5HB”) without saving anything; use it to confirm the postcode/address combination
-before pressing Save.
-
-- `CLIENT_ID`, `CLIENT_SECRET`
-- `TENANT_ID` (use `common` for personal accounts)
-- `OUTLOOK_CALENDAR_NAME` (optional)
-- `OUTLOOK_CALENDAR_ID` (optional, preferred for exact targeting)
-- `OUTLOOK_TOKEN_FILE` (optional path to `o365_token.txt`)
-- `ENABLE_OUTLOOK`, `ENABLE_GOOGLE_CALENDAR`
-- `ENABLE_MQTT`, `MQTT_BROKER`, `MQTT_PORT`, `MQTT_USERNAME`, `MQTT_PASSWORD`, `MQTT_TOPIC`, `MQTT_STATE_FORMAT`
-- `ENABLE_HA_WEBHOOK`, `HA_WEBHOOK_URL`
-- `ENABLE_REST_API`, `REST_API_HOST`, `REST_API_PORT`
-- `SELENIUM_HOST`, `SELENIUM_PORT`
-- `GOOGLE_SERVICE_ACCOUNT_FILE`, `GOOGLE_CALENDAR_ID`
-- `CONFIG_PATH` (optional local config path)
-
-## Outlook Calendar setup
-
-1) Create an app registration in Azure Portal.
-2) Set supported account types as needed (use `common` for personal accounts).
-3) Add delegated API permissions: `Calendars.ReadWrite`, `User.Read`, `offline_access`.
-4) Enable "Allow public client flows" (device code).
-5) Set `.env` with `CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID` (or enter these in the Web UI).
-6) Generate a token file (Web UI or console):
-
-Web UI (recommended):
-- Open "Token setup / refresh".
-- Click "Generate token" to get the URL + code.
-- Complete sign-in in the browser.
-- Click "Complete sign-in" to save `/data/o365_token.txt`.
-
-Console (manual):
+### Host network
 
 ```bash
-# Install msal if missing
-pip install msal
-
-# Generate token (creates o365_token.txt in the current directory)
-python auth_msal.py
+docker run -d --name selenium-server --network host selenium/standalone-chrome
+mkdir -p data
+docker build -t blackbin .
+docker run -d --name blackbin --network host -v ./data:/data blackbin
 ```
 
-If you run the console flow inside Docker:
+### Bridge network
 
 ```bash
-docker exec -it blackbin python auth_msal.py
+docker network create selenium-network
+docker run -d --name selenium-server --network selenium-network \
+  -p 4444:4444 -p 7900:7900 --shm-size="2g" selenium/standalone-chrome
+mkdir -p data
+docker build -t blackbin .
+docker run -d --name blackbin --network selenium-network \
+  -e SELENIUM_HOST=selenium-server -p 5050:5050 -v ./data:/data blackbin
 ```
 
-Copy or upload the resulting `o365_token.txt` into `/data` (or upload via the Web UI).
-
-Token refresh:
-- Automatic during normal runs (uses refresh_token).
-- If refresh fails or access is revoked, re-run the token flow (Web UI or console).
-
-Calendar selection:
-- Use "Fetch calendars" in the Web UI to select a calendar.
-- If `OUTLOOK_CALENDAR_NAME` / `OUTLOOK_CALENDAR_ID` are empty, the default calendar is used.
-
-**Token lifespan**
-
-- Access tokens expire after about one hour (security requirement), but BlackBin stores the refresh token in `/data/o365_token.txt` and renews the access token every run.
-- The refresh token itself has a ~90-day sliding lifetime; each successful refresh resets the clock. You only need to re-run the token flow if the refresh token hasn’t been used for 90 days or it’s rejected (revoked consent, changed client secrets, tenant policy, etc.).
-
-## Google Calendar setup (service account)
-
-1) Create a Google Cloud project and enable Google Calendar API.
-2) Create a Service Account and download a JSON key.
-3) Save the key as `google_service_account.json` in the project root (or upload via Web UI).
-4) Find the service account email in the JSON file (field `client_email`), e.g.:
-   ```
-   blackbin-calendar@my-project-123456.iam.gserviceaccount.com
-   ```
-5) Share your Google Calendar with the service account:
-   - Open https://calendar.google.com
-   - Click ⚙️ Settings → select your calendar on the left
-   - Scroll to "Share with specific people or groups"
-   - Click "Add people and groups"
-   - Paste the service account email
-   - Select permission: **"Make changes to events"**
-   - Click Send
-6) Set `.env`:
-
-```dotenv
-ENABLE_GOOGLE_CALENDAR=true
-GOOGLE_SERVICE_ACCOUNT_FILE=google_service_account.json
-GOOGLE_CALENDAR_ID=primary
-```
-
-Calendar selection (Web UI):
-- Upload service account JSON in the Google Calendar section.
-- Click "Fetch calendars" to load available calendars.
-- Select a calendar from the dropdown — Calendar ID fills automatically.
-
-**Important:** Shared calendars don't appear automatically in the Service Account's calendar list.
-If "Fetch calendars" returns empty, add the calendar manually:
+### Stop and remove
 
 ```bash
-docker exec blackbin python -c "
-from integrations.google_calendar import GoogleCalendar
-gc = GoogleCalendar('/data/google_service_account.json')
-calendar_id = 'YOUR_CALENDAR_ID@group.calendar.google.com'
-gc.service.calendarList().insert(body={'id': calendar_id}).execute()
-print('Calendar added!')
-"
+docker stop blackbin selenium-server
+docker rm blackbin selenium-server
 ```
 
-Get Calendar ID from Google Calendar → Settings → Integrate calendar.
-For custom calendars the ID looks like `abc123...@group.calendar.google.com`.
-For the primary calendar use `primary` or the owner's email.
+---
 
-**Reminders/Notifications:**
-
-Google Calendar reminders are per-user. When a Service Account creates an event, the reminder
-settings apply to the Service Account (which doesn't receive notifications), not to you.
-
-To receive notifications, configure default reminders in your calendar:
-1. Google Calendar → Settings → select your calendar.
-2. Find "Event notifications" section.
-3. Add a notification (e.g., 6 hours before).
-
-All events in that calendar will then use your default notifications.
-
-Optional test:
+## Run without Docker
 
 ```bash
-python auth_google.py
+# Install dependencies
+pip install -r requirements.txt
+
+# Start Selenium
+docker run -d --name selenium-server -p 4444:4444 selenium/standalone-chrome
+
+# Configure
+export CONFIG_PATH=./blackbin_config.json
+python blackbin.py --configure
+
+# Run
+python blackbin.py
+
+# Web UI (optional)
+python web_ui.py
 ```
 
-## Rebuild after changes
+---
 
-After code changes, rebuild and restart containers (stop/remove and re-run your chosen start script).
+## Schedule
 
-## Project structure
+Default cron: Monday, Friday, Saturday at 19:30; Wednesday at 03:30.
+
+View current schedule:
+
+```bash
+docker exec blackbin crontab -l
+```
+
+Override via environment:
+
+```bash
+CRON_SCHEDULES="30 19 * * 1,5,6;30 3 * * 3"
+```
+
+Schedules set in Web UI apply immediately. Manual edits require container restart.
+
+---
+
+## Project Structure
 
 ```
 blackbin/
-├── README.md                   # This file
-├── blackbin.py                 # Main script
-├── integrations/               # Modular integrations
-│   ├── outlook_calendar.py     # Outlook (active)
-│   ├── google_calendar.py      # Google Calendar
-│   └── notifiers/              # Home Assistant notifiers
+├── blackbin.py              # Main script
+├── web_ui.py                # Flask Web UI
+├── integrations/
+│   ├── outlook_calendar.py  # Outlook integration
+│   ├── google_calendar.py   # Google Calendar integration
+│   └── notifiers/           # MQTT, webhook, REST
+├── templates/               # Web UI templates
+├── data/                    # Config and tokens (mounted volume)
 ├── Dockerfile
-├── docker_start.sh
-├── doc_start.sh
-├── data/                       # Local config storage
-│   └── blackbin_config.json    # Created by --configure
-└── .env                        # Secrets (do not commit)
+├── docker_start.sh          # Host network launcher
+├── doc_start.sh             # Bridge network launcher
+├── .env.example             # Environment template
+└── requirements.txt
 ```
 
-## Important
+---
 
-Secrets to keep out of git:
-- `.env` - client IDs, secrets, and flags
-- `o365_token.txt` - OAuth token
-- `data/blackbin_config.json` - local runtime config
-- `google_service_account.json` - Google credentials
+## Secrets (do not commit)
+
+- `.env` — credentials and flags
+- `o365_token.txt` — Outlook OAuth token
+- `google_service_account.json` — Google credentials
+- `data/blackbin_config.json` — runtime config
