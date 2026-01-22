@@ -51,3 +51,10 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+# Images
+*.png
+
+# Local config
+data/
+blackbin_config.json

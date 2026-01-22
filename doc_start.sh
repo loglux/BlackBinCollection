@@ -14,6 +14,8 @@ if [ "$(docker ps -a | grep selenium-server)" ]; then
 fi
 docker run -d --name selenium-server --network selenium-network -p 4444:4444 -p 7900:7900 --shm-size="2g" -v selenium:/home/seluser selenium/standalone-chrome
 
+mkdir -p data
+
 # Check if the blackbin container already exists
 if [ "$(docker ps -a | grep blackbin)" ]; then
     echo "blackbin container already exists, updating..."
@@ -21,4 +23,4 @@ if [ "$(docker ps -a | grep blackbin)" ]; then
     docker rm blackbin
 fi
 docker build -t blackbin .
-docker run -d --name blackbin --network selenium-network -e SELENIUM_HOST=selenium-server blackbin
+docker run -d --name blackbin --network selenium-network -e SELENIUM_HOST=selenium-server -p 5050:5050 -v "$(pwd)/data:/data" blackbin

@@ -1,25 +1,43 @@
 """
 Microsoft Outlook/Graph API calendar integration
 """
-import os
 import json
-import requests
+import os
 import time
+import urllib.parse
 from datetime import datetime, timedelta
+import requests
+
 from .calendar_base import CalendarBase
 
 
 class OutlookCalendar(CalendarBase):
     """Microsoft Outlook/Graph API calendar integration"""
 
-    def __init__(self, token_file: str = 'o365_token.txt'):
+    def __init__(
+        self,
+        token_file: str = 'o365_token.txt',
+        calendar_name: str | None = None,
+        calendar_id: str | None = None,
+        client_id: str | None = None,
+        tenant_id: str | None = None,
+    ):
         """
         Initialize Outlook Calendar integration
 
         Args:
             token_file: Path to OAuth 2.0 token file
+            calendar_name: Calendar name to target (optional)
+            calendar_id: Calendar ID to target (optional)
+            client_id: Client ID used for refresh (optional)
+            tenant_id: Tenant ID used for refresh (optional)
         """
         self.token_file = token_file
+        self.calendar_name = calendar_name.strip() if calendar_name else None
+        self.calendar_id = calendar_id.strip() if calendar_id else None
+        self.client_id = client_id.strip() if client_id else None
+        self.tenant_id = tenant_id.strip() if tenant_id else None
+        self._calendar_resolved = False
         self.token_data = None
         self.access_token = self._load_and_refresh_token()
 
@@ -56,13 +74,13 @@ class OutlookCalendar(CalendarBase):
                 return False
 
             # Get CLIENT_ID from environment
-            client_id = os.getenv('CLIENT_ID')
+            client_id = self.client_id or os.getenv('CLIENT_ID')
             if not client_id:
                 print(f"[Outlook] CLIENT_ID not found in environment")
                 return False
 
-            # Microsoft token endpoint
-            token_url = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
+            tenant_id = self.tenant_id or os.getenv('TENANT_ID') or 'common'
+            token_url = f'https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token'
 
             data = {
                 'client_id': client_id,
@@ -101,6 +119,10 @@ class OutlookCalendar(CalendarBase):
         if not self.access_token:
             return False
 
+        events_url = self._get_events_url()
+        if not events_url:
+            return False
+
         headers = {
             'Authorization': f'Bearer {self.access_token}',
             'Content-Type': 'application/json'
@@ -109,7 +131,7 @@ class OutlookCalendar(CalendarBase):
         start_str = start.strftime('%Y-%m-%dT%H:%M:%S')
         end_str = end.strftime('%Y-%m-%dT%H:%M:%S')
 
-        events_url = f"https://graph.microsoft.com/v1.0/me/events?$filter=start/dateTime ge '{start_str}' and end/dateTime le '{end_str}'"
+        events_url = f"{events_url}?$filter=start/dateTime ge '{start_str}' and end/dateTime le '{end_str}'"
 
         try:
             response = requests.get(events_url, headers=headers)
@@ -135,6 +157,10 @@ class OutlookCalendar(CalendarBase):
         if self.event_exists(title, start, end):
             return False
 
+        events_url = self._get_events_url()
+        if not events_url:
+            return False
+
         headers = {
             'Authorization': f'Bearer {self.access_token}',
             'Content-Type': 'application/json'
@@ -158,10 +184,8 @@ class OutlookCalendar(CalendarBase):
             "reminderMinutesBeforeStart": reminder_minutes
         }
 
-        create_url = "https://graph.microsoft.com/v1.0/me/events"
-
         try:
-            response = requests.post(create_url, headers=headers, json=event_data)
+            response = requests.post(events_url, headers=headers, json=event_data)
 
             if response.status_code == 201:
                 print(f"[Outlook] ✓ Event '{title}' created for {start.strftime('%Y-%m-%d')}")
@@ -173,3 +197,88 @@ class OutlookCalendar(CalendarBase):
         except Exception as e:
             print(f"[Outlook] Error creating event: {e}")
             return False
+
+    def _get_events_url(self) -> str | None:
+        if self.calendar_id:
+            encoded = urllib.parse.quote(self.calendar_id, safe="")
+            return f"https://graph.microsoft.com/v1.0/me/calendars/{encoded}/events"
+
+        if self.calendar_name and not self._calendar_resolved:
+            self.calendar_id = self._resolve_calendar_id()
+            self._calendar_resolved = True
+
+        if self.calendar_id:
+            encoded = urllib.parse.quote(self.calendar_id, safe="")
+            return f"https://graph.microsoft.com/v1.0/me/calendars/{encoded}/events"
+
+        if self.calendar_name:
+            print(f"[Outlook] Calendar '{self.calendar_name}' not found.")
+            return None
+
+        return "https://graph.microsoft.com/v1.0/me/events"
+
+    def _resolve_calendar_id(self) -> str | None:
+        if not self.access_token:
+            return None
+        if not self.calendar_name:
+            return None
+
+        headers = {
+            'Authorization': f'Bearer {self.access_token}',
+            'Content-Type': 'application/json'
+        }
+
+        calendars_url = "https://graph.microsoft.com/v1.0/me/calendars"
+
+        try:
+            response = requests.get(calendars_url, headers=headers)
+            if response.status_code != 200:
+                print(f"[Outlook] Calendar lookup failed: {response.status_code}")
+                print(f"[Outlook] Response: {response.text}")
+                return None
+
+            calendars = response.json().get('value', [])
+            matches = [
+                calendar for calendar in calendars
+                if str(calendar.get('name', '')).strip().lower()
+                == self.calendar_name.strip().lower()
+            ]
+
+            if not matches:
+                return None
+            if len(matches) > 1:
+                print(f"[Outlook] Multiple calendars named '{self.calendar_name}', using the first match.")
+            return matches[0].get('id')
+        except Exception as e:
+            print(f"[Outlook] Error looking up calendars: {e}")
+            return None
+
+    def list_calendars(self) -> tuple[list, str | None]:
+        """Return available calendars as a list of dicts with id/name."""
+        if not self.access_token:
+            return [], "Access token not available"
+
+        headers = {
+            'Authorization': f'Bearer {self.access_token}',
+            'Content-Type': 'application/json'
+        }
+
+        calendars_url = "https://graph.microsoft.com/v1.0/me/calendars"
+
+        try:
+            response = requests.get(calendars_url, headers=headers)
+            if response.status_code != 200:
+                message = response.text.strip() or f"HTTP {response.status_code}"
+                return [], f"Calendar lookup failed: {message}"
+
+            calendars = response.json().get('value', [])
+            results = []
+            for calendar in calendars:
+                name = str(calendar.get('name', '')).strip()
+                calendar_id = str(calendar.get('id', '')).strip()
+                if not name or not calendar_id:
+                    continue
+                results.append({"id": calendar_id, "name": name})
+            return results, None
+        except Exception as e:
+            return [], f"Error looking up calendars: {e}"

@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BlackBin Setup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f5f1e8;
+        --surface: #ffffff;
+        --ink: #1b1a16;
+        --muted: #6d665b;
+        --accent: #e07a1f;
+        --accent-2: #0f766e;
+        --ring: rgba(15, 118, 110, 0.25);
+        --danger: #b91c1c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", "Segoe UI", "Tahoma", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 10% 10%, rgba(224, 122, 31, 0.15), transparent 45%),
+          radial-gradient(circle at 90% 20%, rgba(15, 118, 110, 0.12), transparent 50%),
+          var(--bg);
+      }
+
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 32px 20px 64px;
+      }
+
+      header {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        font-size: clamp(28px, 3vw, 40px);
+        margin: 0;
+        letter-spacing: -0.02em;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 16px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 18px;
+      }
+
+      .card {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 12px 30px rgba(25, 22, 17, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        animation: floatIn 0.4s ease both;
+      }
+
+      .card h2 {
+        font-size: 18px;
+        margin: 0 0 10px;
+      }
+
+      label {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      input[type="text"],
+      input[type="password"],
+      input[type="time"],
+      input[type="number"],
+      textarea,
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        font-family: inherit;
+        font-size: 14px;
+        margin-bottom: 12px;
+        outline: none;
+        transition: box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+
+      input[type="text"]:focus,
+      input[type="password"]:focus,
+      input[type="number"]:focus,
+      textarea:focus,
+      select:focus {
+        border-color: var(--accent-2);
+        box-shadow: 0 0 0 4px var(--ring);
+      }
+
+      textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(224, 122, 31, 0.1);
+        color: #7a3f09;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        margin-bottom: 12px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      button {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 16px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        background: var(--accent);
+        color: white;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      button.secondary {
+        background: transparent;
+        color: var(--accent-2);
+        border: 1px solid rgba(15, 118, 110, 0.4);
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 16px rgba(224, 122, 31, 0.2);
+      }
+
+      .note {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+
+      .token-status {
+        font-size: 12px;
+        margin-top: 6px;
+        color: var(--muted);
+      }
+
+      .token-status.ok {
+        color: var(--accent-2);
+      }
+
+      .token-status.warn {
+        color: var(--danger);
+      }
+
+      .status {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 18px;
+      }
+
+      .message {
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 14px;
+        background: rgba(15, 118, 110, 0.12);
+        color: #0f3f3b;
+      }
+
+      .error {
+        background: rgba(185, 28, 28, 0.12);
+        color: var(--danger);
+      }
+
+      .toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .toggle input {
+        width: auto;
+      }
+
+      .schedule-builder {
+        display: grid;
+        gap: 12px;
+      }
+
+      .schedule-row {
+        border: 1px dashed rgba(0, 0, 0, 0.12);
+        background: #fbf9f3;
+        border-radius: 12px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 220px;
+      }
+
+      .schedule-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        align-items: flex-start;
+      }
+
+      .day-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .day-label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .day-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .time-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 140px;
+        align-items: flex-end;
+        justify-content: flex-start;
+      }
+
+      .time-group label {
+        align-self: flex-start;
+        margin-bottom: 0;
+      }
+
+      .schedule-actions {
+        display: flex;
+        justify-content: center;
+        margin-top: auto;
+        padding: 0 6px;
+      }
+
+      .schedule-actions .remove-row {
+        margin: 0;
+        width: 100%;
+        max-width: 240px;
+      }
+
+      .day-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(15, 118, 110, 0.08);
+        color: #0f4a45;
+        font-size: 12px;
+      }
+
+      .day-pill input {
+        width: auto;
+      }
+
+      .advanced {
+        margin-top: 12px;
+        padding-top: 6px;
+        border-top: 1px dashed rgba(0, 0, 0, 0.08);
+      }
+
+      .advanced summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--accent-2);
+        margin-bottom: 8px;
+      }
+
+      @keyframes floatIn {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 720px) {
+        .wrap {
+          padding: 24px 16px 48px;
+        }
+
+        .schedule-controls {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>BlackBin Control</h1>
+        <div class="subtitle">Configure address, schedule, MQTT, and calendar settings.</div>
+      </header>
+
+      <div class="status">
+        {% if last_run_message %}
+          <div class="message {% if last_run_status == 'error' %}error{% endif %}">
+            Last run: {{ last_run_message }}{% if last_run_time %} ({{ last_run_time }}){% endif %}
+          </div>
+        {% endif %}
+        {% for message in messages %}
+          <div class="message">{{ message }}</div>
+        {% endfor %}
+        {% for error in errors %}
+          <div class="message error">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <form method="post" enctype="multipart/form-data">
+        <div class="grid">
+          <section class="card">
+            <h2>Address</h2>
+            {% if address_summary %}
+              <div class="pill">Current: {{ address_summary }}</div>
+            {% endif %}
+            <label for="postcode">Postcode</label>
+            <input id="postcode" name="postcode" type="text" value="{{ postcode_value }}" placeholder="BT5 4HN" />
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;">
+              <button class="secondary" type="submit" name="action" value="lookup">Lookup addresses</button>
+              <button class="secondary" type="submit" name="action" value="validate">Validate address</button>
+            </div>
+            {% if addresses %}
+              <label for="address_choice">Select address</label>
+              <select id="address_choice" name="address_choice">
+                {% for value, text in addresses %}
+                  {% set option_value = value ~ "||" ~ text %}
+                  <option value="{{ option_value }}" {% if selected_address_choice == option_value %}selected{% endif %}>
+                    {{ text }}
+                  </option>
+                {% endfor %}
+              </select>
+            {% endif %}
+            <div class="note">Lookup requires Selenium to be reachable.</div>
+          </section>
+
+          <section class="card">
+            <h2>Schedule</h2>
+            <div class="schedule-builder">
+              <div id="schedule-rows">
+                {% for entry in schedule_entries %}
+                  <div class="schedule-row">
+                    <div class="schedule-controls">
+                      <div class="day-group">
+                        <span class="day-label">Days</span>
+                        <div class="day-options">
+                          <label class="day-pill">
+                            <input class="schedule-day" type="checkbox" value="mon" {% if 'mon' in entry.days %}checked{% endif %} />
+                            Mon
+                          </label>
+                          <label class="day-pill">
+                            <input class="schedule-day" type="checkbox" value="tue" {% if 'tue' in entry.days %}checked{% endif %} />
+                            Tue
+                          </label>
+                          <label class="day-pill">
+                            <input class="schedule-day" type="checkbox" value="wed" {% if 'wed' in entry.days %}checked{% endif %} />
+                            Wed
+                          </label>
+                          <label class="day-pill">
+                            <input class="schedule-day" type="checkbox" value="thu" {% if 'thu' in entry.days %}checked{% endif %} />
+                            Thu
+                          </label>
+                          <label class="day-pill">
+                            <input class="schedule-day" type="checkbox" value="fri" {% if 'fri' in entry.days %}checked{% endif %} />
+                            Fri
+                          </label>
+                          <label class="day-pill">
+                            <input class="schedule-day" type="checkbox" value="sat" {% if 'sat' in entry.days %}checked{% endif %} />
+                            Sat
+                          </label>
+                          <label class="day-pill">
+                            <input class="schedule-day" type="checkbox" value="sun" {% if 'sun' in entry.days %}checked{% endif %} />
+                            Sun
+                          </label>
+                        </div>
+                      </div>
+                      <div class="time-group">
+                        <label>Time</label>
+                        <input class="schedule-time" type="time" value="{{ entry.time }}" />
+                      </div>
+                      <input class="schedule-entry" type="hidden" name="schedule_entry" value="{{ entry.line }}" />
+                    </div>
+                    <div class="schedule-actions">
+                      <button class="secondary remove-row" type="button">Remove</button>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+              <button class="secondary" id="add-schedule" type="button">Add schedule</button>
+              <div class="note">Select days and time. Leave days empty for every day. Changes apply immediately.</div>
+            </div>
+
+            <details class="advanced">
+              <summary>Advanced cron (optional)</summary>
+              <label for="schedule">Custom schedules (one per line)</label>
+              <textarea id="schedule" name="schedule" placeholder="mon,fri,sat 19:30">{{ schedule_lines }}</textarea>
+              <div class="note">
+                Examples: "30 3 * * 3", "mon 19:30", "wed 03:30", "3:30".
+              </div>
+            </details>
+          </section>
+
+          <section class="card">
+            <h2>MQTT</h2>
+            <div class="toggle">
+              <input id="mqtt_enabled" name="mqtt_enabled" type="checkbox" {% if config.get('mqtt', {}).get('enabled') %}checked{% endif %} />
+              <label for="mqtt_enabled">Enable MQTT</label>
+            </div>
+            <label for="mqtt_broker">Broker</label>
+            <input id="mqtt_broker" name="mqtt_broker" type="text" value="{{ config.get('mqtt', {}).get('broker', '') }}" placeholder="192.168.1.10" />
+            <div class="row">
+              <div>
+                <label for="mqtt_port">Port</label>
+                <input id="mqtt_port" name="mqtt_port" type="number" value="{{ config.get('mqtt', {}).get('port', 1883) }}" />
+              </div>
+              <div>
+                <label for="mqtt_username">Username</label>
+                <input id="mqtt_username" name="mqtt_username" type="text" value="{{ config.get('mqtt', {}).get('username', '') }}" />
+              </div>
+              <div>
+                <label for="mqtt_password">Password</label>
+                <input id="mqtt_password" name="mqtt_password" type="password" value="" />
+                {% if mqtt_password_present %}
+                  <div class="note">Password: ******** (set). Leave blank to keep it.</div>
+                {% endif %}
+              </div>
+            </div>
+            <label for="mqtt_topic">Topic</label>
+            <input id="mqtt_topic" name="mqtt_topic" type="text" value="{{ config.get('mqtt', {}).get('topic', 'homeassistant/sensor/blackbin') }}" />
+            <label for="mqtt_state_format">State date format (strftime)</label>
+            <input id="mqtt_state_format" name="mqtt_state_format" type="text" value="{{ config.get('mqtt', {}).get('state_format', '') }}" placeholder="%a %d %b" />
+          </section>
+
+          <section class="card">
+            <h2>Outlook Calendar</h2>
+            <div class="toggle">
+              <input id="outlook_enabled" name="outlook_enabled" type="checkbox" {% if config.get('calendars', {}).get('outlook', {}).get('enabled', True) %}checked{% endif %} />
+              <label for="outlook_enabled">Enable Outlook</label>
+            </div>
+            <label for="outlook_client_id">Client ID</label>
+            <input id="outlook_client_id" name="outlook_client_id" type="text" value="{{ config.get('calendars', {}).get('outlook', {}).get('client_id') or '' }}" />
+            <label for="outlook_client_secret">Client Secret</label>
+            <input id="outlook_client_secret" name="outlook_client_secret" type="password" value="" />
+            {% if outlook_secret_present %}
+              <div class="note">Secret: ******** (set). Leave blank to keep it.</div>
+            {% endif %}
+            <label for="outlook_tenant_id">Tenant ID</label>
+            <input id="outlook_tenant_id" name="outlook_tenant_id" type="text" value="{{ config.get('calendars', {}).get('outlook', {}).get('tenant_id') or 'common' }}" />
+            <div class="row">
+              <div>
+                <label for="outlook_calendar_name">Calendar name (optional)</label>
+                <input id="outlook_calendar_name" name="outlook_calendar_name" type="text" value="{{ config.get('calendars', {}).get('outlook', {}).get('calendar_name') or '' }}" placeholder="e.g. Black Bin" />
+              </div>
+              <div>
+                <label for="outlook_calendar_id">Calendar ID (optional)</label>
+                <input id="outlook_calendar_id" name="outlook_calendar_id" type="text" value="{{ config.get('calendars', {}).get('outlook', {}).get('calendar_id') or '' }}" placeholder="From list or manual ID" />
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label for="outlook_calendar_select">Select calendar</label>
+                <select id="outlook_calendar_select">
+                  <option value="">Fetch calendars to populate</option>
+                </select>
+              </div>
+              <div>
+                <label>&nbsp;</label>
+                <button class="secondary" type="button" id="fetch-outlook-calendars" {% if not outlook_token_present %}disabled{% endif %}>Fetch calendars</button>
+              </div>
+            </div>
+            <div class="note" id="outlook_calendar_status">Leave blank to use the default calendar. Selecting a calendar fills name and ID.</div>
+            <label for="outlook_token_file">Upload token file (o365_token.txt)</label>
+            <input id="outlook_token_file" name="outlook_token_file" type="file" />
+            {% if outlook_token_present %}
+              <div class="note">Token file detected. Uploading a new file will replace it.</div>
+            {% endif %}
+            {% if outlook_token_info %}
+              <div class="token-status {% if outlook_token_info.get('status') == 'valid' %}ok{% elif outlook_token_info.get('status') in ['missing', 'expired', 'invalid', 'unknown'] %}warn{% endif %}">
+                {{ outlook_token_info.get('message') }}
+                {% if outlook_token_info.get('expires_at') %} (expires {{ outlook_token_info.get('expires_at') }}){% endif %}
+              </div>
+            {% endif %}
+            <details class="advanced" id="outlook-token-tools" {% if outlook_token_info and outlook_token_info.get('status') in ['missing', 'expired', 'invalid', 'unknown'] %}open{% endif %}>
+              <summary>Token setup / refresh</summary>
+              <div class="row">
+                <div>
+                  <label>&nbsp;</label>
+                  <button class="secondary" type="button" id="outlook-token-start">Generate token</button>
+                </div>
+                <div>
+                  <label>&nbsp;</label>
+                  <button class="secondary" type="button" id="outlook-token-finish" hidden disabled>Complete sign-in</button>
+                </div>
+              </div>
+              <div class="note" id="outlook-token-status">Generate token uses device login. Open the URL, enter the code, then click "Complete sign-in".</div>
+            </details>
+          </section>
+
+          <section class="card">
+            <h2>Google Calendar</h2>
+            <div class="toggle">
+              <input id="google_enabled" name="google_enabled" type="checkbox" {% if config.get('calendars', {}).get('google', {}).get('enabled') %}checked{% endif %} />
+              <label for="google_enabled">Enable Google</label>
+            </div>
+            <label for="google_calendar_id">Calendar ID</label>
+            <input id="google_calendar_id" name="google_calendar_id" type="text" value="{{ config.get('calendars', {}).get('google', {}).get('calendar_id') or 'primary' }}" />
+            <label for="google_service_account_file">Upload service account JSON</label>
+            <input id="google_service_account_file" name="google_service_account_file" type="file" />
+            {% if google_token_present %}
+              <div class="note">Service account file detected. Uploading a new file will replace it.</div>
+            {% endif %}
+          </section>
+        </div>
+
+        <div class="actions">
+          <button type="submit" name="action" value="save">Save settings</button>
+          <button type="submit" name="action" value="run" class="secondary">Save and run now</button>
+        </div>
+      </form>
+    </div>
+    <template id="schedule-row-template">
+      <div class="schedule-row">
+        <div class="schedule-controls">
+          <div class="day-group">
+            <span class="day-label">Days</span>
+            <div class="day-options">
+              <label class="day-pill">
+                <input class="schedule-day" type="checkbox" value="mon" />
+                Mon
+              </label>
+              <label class="day-pill">
+                <input class="schedule-day" type="checkbox" value="tue" />
+                Tue
+              </label>
+              <label class="day-pill">
+                <input class="schedule-day" type="checkbox" value="wed" />
+                Wed
+              </label>
+              <label class="day-pill">
+                <input class="schedule-day" type="checkbox" value="thu" />
+                Thu
+              </label>
+              <label class="day-pill">
+                <input class="schedule-day" type="checkbox" value="fri" />
+                Fri
+              </label>
+              <label class="day-pill">
+                <input class="schedule-day" type="checkbox" value="sat" />
+                Sat
+              </label>
+              <label class="day-pill">
+                <input class="schedule-day" type="checkbox" value="sun" />
+                Sun
+              </label>
+            </div>
+          </div>
+          <div class="time-group">
+            <label>Time</label>
+            <input class="schedule-time" type="time" value="19:30" />
+          </div>
+          <input class="schedule-entry" type="hidden" name="schedule_entry" value="" />
+        </div>
+        <div class="schedule-actions">
+          <button class="secondary remove-row" type="button">Remove</button>
+        </div>
+      </div>
+    </template>
+    <script>
+      (function () {
+        const rows = document.getElementById("schedule-rows");
+        const addButton = document.getElementById("add-schedule");
+        const template = document.getElementById("schedule-row-template");
+        const dayOrder = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+        if (!rows || !addButton || !template) {
+          return;
+        }
+
+        function buildLine(row) {
+          const timeInput = row.querySelector(".schedule-time");
+          const timeValue = timeInput ? timeInput.value : "";
+          if (!timeValue) {
+            return "";
+          }
+          const days = Array.from(row.querySelectorAll(".schedule-day:checked")).map(
+            (input) => input.value
+          );
+          if (!days.length || days.length === dayOrder.length) {
+            return timeValue;
+          }
+          return `${days.join(",")} ${timeValue}`;
+        }
+
+        function updateRow(row) {
+          const hidden = row.querySelector(".schedule-entry");
+          if (!hidden) {
+            return;
+          }
+          hidden.value = buildLine(row);
+        }
+
+        function wireRow(row) {
+          row.querySelectorAll(".schedule-day").forEach((input) => {
+            input.addEventListener("change", () => updateRow(row));
+          });
+          const timeInput = row.querySelector(".schedule-time");
+          if (timeInput) {
+            timeInput.addEventListener("change", () => updateRow(row));
+          }
+          const removeButton = row.querySelector(".remove-row");
+          if (removeButton) {
+            removeButton.addEventListener("click", () => row.remove());
+          }
+          updateRow(row);
+        }
+
+        rows.querySelectorAll(".schedule-row").forEach(wireRow);
+
+        addButton.addEventListener("click", () => {
+          const fragment = template.content.cloneNode(true);
+          rows.appendChild(fragment);
+          const newRow = rows.lastElementChild;
+          if (newRow) {
+            wireRow(newRow);
+          }
+        });
+
+        const fetchCalendarsButton = document.getElementById("fetch-outlook-calendars");
+        const calendarSelect = document.getElementById("outlook_calendar_select");
+        const calendarNameInput = document.getElementById("outlook_calendar_name");
+        const calendarIdInput = document.getElementById("outlook_calendar_id");
+        const calendarStatus = document.getElementById("outlook_calendar_status");
+        const tokenStartButton = document.getElementById("outlook-token-start");
+        const tokenFinishButton = document.getElementById("outlook-token-finish");
+        const tokenStatus = document.getElementById("outlook-token-status");
+
+        function setCalendarStatus(message, isError) {
+          if (!calendarStatus) {
+            return;
+          }
+          calendarStatus.textContent = message;
+          if (isError) {
+            calendarStatus.classList.add("error");
+          } else {
+            calendarStatus.classList.remove("error");
+          }
+        }
+
+        if (fetchCalendarsButton && calendarSelect) {
+          fetchCalendarsButton.addEventListener("click", async () => {
+            fetchCalendarsButton.disabled = true;
+            setCalendarStatus("Fetching calendars...");
+            try {
+              const response = await fetch("/outlook/calendars", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+              });
+              const payload = await response.json();
+              if (!response.ok) {
+                setCalendarStatus(payload.error || "Failed to load calendars.", true);
+                return;
+              }
+              const calendars = payload.calendars || [];
+              calendarSelect.innerHTML = '<option value="">Select a calendar</option>';
+              calendars.forEach((calendar) => {
+                const option = document.createElement("option");
+                option.value = calendar.id;
+                option.textContent = calendar.name;
+                if (calendarIdInput && calendarIdInput.value === calendar.id) {
+                  option.selected = true;
+                }
+                calendarSelect.appendChild(option);
+              });
+              setCalendarStatus(`${calendars.length} calendars loaded.`);
+            } catch (error) {
+              setCalendarStatus("Failed to fetch calendars.", true);
+            } finally {
+              fetchCalendarsButton.disabled = false;
+            }
+          });
+        }
+
+        if (calendarSelect) {
+          calendarSelect.addEventListener("change", () => {
+            const option = calendarSelect.selectedOptions[0];
+            if (!option) {
+              return;
+            }
+            if (calendarNameInput) {
+              calendarNameInput.value = option.textContent || "";
+            }
+            if (calendarIdInput) {
+              calendarIdInput.value = option.value || "";
+            }
+          });
+        }
+
+        function setTokenStatus(message, isError, options = {}) {
+          if (!tokenStatus) {
+            return;
+          }
+          tokenStatus.innerHTML = "";
+          tokenStatus.appendChild(document.createTextNode(message));
+          if (options.link) {
+            tokenStatus.appendChild(document.createTextNode(" "));
+            tokenStatus.appendChild(options.link);
+          }
+          if (options.trailing) {
+            tokenStatus.appendChild(document.createTextNode(" " + options.trailing));
+          }
+          if (isError) {
+            tokenStatus.classList.add("error");
+          } else {
+            tokenStatus.classList.remove("error");
+          }
+        }
+
+        if (tokenStartButton) {
+          tokenStartButton.addEventListener("click", async () => {
+            tokenStartButton.disabled = true;
+            setTokenStatus("Starting device login...");
+            let payload = {};
+            try {
+              const response = await fetch("/outlook/token/start", { method: "POST" });
+              payload = await response.json();
+              if (!response.ok) {
+                setTokenStatus(payload.error || "Failed to start device login.", true);
+                return;
+              }
+              const minutes = payload.expires_in ? Math.ceil(payload.expires_in / 60) : null;
+              const instruction = `Enter code ${payload.user_code}.`;
+              const link = document.createElement("a");
+              link.href = payload.verification_uri;
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+              link.textContent = "Open verification page";
+              const trailing = minutes ? `Code expires in ${minutes} min.` : "";
+              setTokenStatus(instruction, false, { link, trailing });
+              if (tokenFinishButton) {
+                tokenFinishButton.hidden = false;
+                tokenFinishButton.disabled = false;
+              }
+            } catch (error) {
+              setTokenStatus("Failed to start device login.", true);
+            } finally {
+              tokenStartButton.disabled = false;
+            }
+          });
+        }
+
+        if (tokenFinishButton) {
+          tokenFinishButton.addEventListener("click", async () => {
+            tokenFinishButton.disabled = true;
+            setTokenStatus("Waiting for sign-in to complete...");
+            let payload = {};
+            try {
+              const response = await fetch("/outlook/token/finish", { method: "POST" });
+              payload = await response.json();
+              if (!response.ok) {
+                setTokenStatus(payload.error || "Token request failed.", true);
+                tokenFinishButton.disabled = false;
+                return;
+              }
+              setTokenStatus(payload.message || "Token saved.");
+              tokenFinishButton.hidden = true;
+              if (fetchCalendarsButton) {
+                fetchCalendarsButton.disabled = false;
+              }
+            } catch (error) {
+              setTokenStatus("Token request failed.", true);
+              tokenFinishButton.disabled = false;
+            }
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

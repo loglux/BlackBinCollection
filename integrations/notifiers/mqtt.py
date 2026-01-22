@@ -11,7 +11,8 @@ class MQTTNotifier(NotifierBase):
     """MQTT publisher for Home Assistant"""
 
     def __init__(self, broker: str, port: int = 1883, username: str = None,
-                 password: str = None, topic: str = "homeassistant/sensor/blackbin"):
+                 password: str = None, topic: str = "homeassistant/sensor/blackbin",
+                 state_format: str = None):
         """
         Initialize MQTT notifier
 
@@ -21,12 +22,14 @@ class MQTTNotifier(NotifierBase):
             username: MQTT username (optional)
             password: MQTT password (optional)
             topic: Base MQTT topic (default: homeassistant/sensor/blackbin)
+            state_format: Optional strftime format for the state payload
         """
         self.broker = broker
         self.port = port
         self.username = username
         self.password = password
         self.topic = topic
+        self.state_format = state_format
         self.client = None
 
     def _connect(self):
@@ -68,7 +71,10 @@ class MQTTNotifier(NotifierBase):
             }
 
             # State payload (next collection date)
-            state_payload = date.strftime('%Y-%m-%d')
+            if self.state_format:
+                state_payload = date.strftime(self.state_format)
+            else:
+                state_payload = date.strftime('%Y-%m-%d')
 
             # Attributes payload
             attributes_payload = {
@@ -78,6 +84,8 @@ class MQTTNotifier(NotifierBase):
                 "days_until": (date - datetime.now()).days,
                 "last_update": datetime.now().isoformat()
             }
+            if self.state_format:
+                attributes_payload["date_formatted"] = date.strftime(self.state_format)
 
             # Publish to MQTT
             self.client.publish(f"{self.topic}/config", json.dumps(config_payload), retain=True)
