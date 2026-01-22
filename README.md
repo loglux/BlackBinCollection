@@ -312,8 +312,19 @@ Calendar selection:
 1) Create a Google Cloud project and enable Google Calendar API.
 2) Create a Service Account and download a JSON key.
 3) Save the key as `google_service_account.json` in the project root (or upload via Web UI).
-4) Share the target Google Calendar with the service account email (permission: "Make changes to events").
-5) Set `.env`:
+4) Find the service account email in the JSON file (field `client_email`), e.g.:
+   ```
+   blackbin-calendar@my-project-123456.iam.gserviceaccount.com
+   ```
+5) Share your Google Calendar with the service account:
+   - Open https://calendar.google.com
+   - Click ⚙️ Settings → select your calendar on the left
+   - Scroll to "Share with specific people or groups"
+   - Click "Add people and groups"
+   - Paste the service account email
+   - Select permission: **"Make changes to events"**
+   - Click Send
+6) Set `.env`:
 
 ```dotenv
 ENABLE_GOOGLE_CALENDAR=true
