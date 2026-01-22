@@ -340,6 +340,20 @@ print('Calendar added!')
 ```
 
 Get Calendar ID from Google Calendar → Settings → Integrate calendar.
+For custom calendars the ID looks like `abc123...@group.calendar.google.com`.
+For the primary calendar use `primary` or the owner's email.
+
+**Reminders/Notifications:**
+
+Google Calendar reminders are per-user. When a Service Account creates an event, the reminder
+settings apply to the Service Account (which doesn't receive notifications), not to you.
+
+To receive notifications, configure default reminders in your calendar:
+1. Google Calendar → Settings → select your calendar.
+2. Find "Event notifications" section.
+3. Add a notification (e.g., 6 hours before).
+
+All events in that calendar will then use your default notifications.
 
 Optional test:
 
