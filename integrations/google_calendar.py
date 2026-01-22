@@ -111,3 +111,20 @@ class GoogleCalendar(CalendarBase):
         except HttpError as e:
             print(f"[Google Calendar] ✗ Error creating event: {e}")
             return False
+
+    def list_calendars(self) -> tuple[list, str | None]:
+        """Return available calendars as a list of dicts with id/name."""
+        if not self.service:
+            return [], "Service not authenticated"
+
+        try:
+            calendar_list = self.service.calendarList().list().execute()
+            results = []
+            for calendar in calendar_list.get('items', []):
+                cal_id = calendar.get('id', '')
+                name = calendar.get('summary', cal_id)
+                if cal_id:
+                    results.append({"id": cal_id, "name": name})
+            return results, None
+        except Exception as e:
+            return [], f"Error listing calendars: {e}"

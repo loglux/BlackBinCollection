@@ -548,12 +548,27 @@
               <input id="google_enabled" name="google_enabled" type="checkbox" {% if config.get('calendars', {}).get('google', {}).get('enabled') %}checked{% endif %} />
               <label for="google_enabled">Enable Google</label>
             </div>
+            <div class="row">
+              <div>
+                <label for="google_calendar_select">Select calendar</label>
+                <select id="google_calendar_select">
+                  <option value="">Fetch calendars to populate</option>
+                </select>
+              </div>
+              <div>
+                <label>&nbsp;</label>
+                <button class="secondary" type="button" id="fetch-google-calendars" {% if not google_token_present %}disabled{% endif %}>Fetch calendars</button>
+              </div>
+            </div>
+            <div class="note" id="google_calendar_status">Leave blank to use the primary calendar.</div>
             <label for="google_calendar_id">Calendar ID</label>
             <input id="google_calendar_id" name="google_calendar_id" type="text" value="{{ config.get('calendars', {}).get('google', {}).get('calendar_id') or 'primary' }}" />
             <label for="google_service_account_file">Upload service account JSON</label>
             <input id="google_service_account_file" name="google_service_account_file" type="file" />
             {% if google_token_present %}
-              <div class="note">Service account file detected. Uploading a new file will replace it.</div>
+              <div class="token-status ok">Service account file detected.</div>
+            {% else %}
+              <div class="token-status warn">No service account file found.</div>
             {% endif %}
           </section>
         </div>
@@ -815,6 +830,65 @@
             } catch (error) {
               setTokenStatus("Token request failed.", true);
               tokenFinishButton.disabled = false;
+            }
+          });
+        }
+
+        // Google Calendar fetch
+        const fetchGoogleCalendarsBtn = document.getElementById("fetch-google-calendars");
+        const googleCalendarSelect = document.getElementById("google_calendar_select");
+        const googleCalendarIdInput = document.getElementById("google_calendar_id");
+        const googleCalendarStatus = document.getElementById("google_calendar_status");
+
+        function setGoogleCalendarStatus(message, isError) {
+          if (!googleCalendarStatus) {
+            return;
+          }
+          googleCalendarStatus.textContent = message;
+          if (isError) {
+            googleCalendarStatus.classList.add("error");
+          } else {
+            googleCalendarStatus.classList.remove("error");
+          }
+        }
+
+        if (fetchGoogleCalendarsBtn && googleCalendarSelect) {
+          fetchGoogleCalendarsBtn.addEventListener("click", async () => {
+            fetchGoogleCalendarsBtn.disabled = true;
+            setGoogleCalendarStatus("Fetching calendars...");
+            try {
+              const response = await fetch("/google/calendars", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+              });
+              const payload = await response.json();
+              if (!response.ok) {
+                setGoogleCalendarStatus(payload.error || "Failed to load calendars.", true);
+                return;
+              }
+              const calendars = payload.calendars || [];
+              googleCalendarSelect.innerHTML = '<option value="">Select a calendar</option>';
+              calendars.forEach((cal) => {
+                const option = document.createElement("option");
+                option.value = cal.id;
+                option.textContent = cal.name;
+                if (googleCalendarIdInput && googleCalendarIdInput.value === cal.id) {
+                  option.selected = true;
+                }
+                googleCalendarSelect.appendChild(option);
+              });
+              setGoogleCalendarStatus(`${calendars.length} calendars loaded.`);
+            } catch (error) {
+              setGoogleCalendarStatus("Failed to fetch calendars.", true);
+            } finally {
+              fetchGoogleCalendarsBtn.disabled = false;
+            }
+          });
+
+          googleCalendarSelect.addEventListener("change", () => {
+            const option = googleCalendarSelect.selectedOptions[0];
+            if (option && option.value && googleCalendarIdInput) {
+              googleCalendarIdInput.value = option.value;
             }
           });
         }

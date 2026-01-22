@@ -464,6 +464,35 @@ def outlook_calendars():
     return jsonify({"calendars": calendars})
 
 
+@app.route("/google/calendars", methods=["POST"])
+def google_calendars():
+    config = _load()
+    google_config = config.get("calendars", {}).get("google", {})
+
+    service_account_file = (
+        google_config.get("service_account_file")
+        or os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
+    )
+    if not service_account_file:
+        service_account_file = _data_dir() / "google_service_account.json"
+
+    service_account_path = Path(service_account_file)
+    if not service_account_path.exists():
+        return jsonify({"error": "Google service account file not found."}), 400
+
+    try:
+        from integrations.google_calendar import GoogleCalendar
+        calendar_client = GoogleCalendar(str(service_account_path))
+        calendars, error = calendar_client.list_calendars()
+        if error:
+            return jsonify({"error": error}), 400
+        if not calendars:
+            return jsonify({"error": "No calendars returned."}), 400
+        return jsonify({"calendars": calendars})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
 @app.route("/outlook/token/start", methods=["POST"])
 def outlook_token_start():
     outlook_config = _load().get("calendars", {}).get("outlook", {})

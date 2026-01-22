@@ -311,7 +311,7 @@ Calendar selection:
 
 1) Create a Google Cloud project and enable Google Calendar API.
 2) Create a Service Account and download a JSON key.
-3) Save the key as `google_service_account.json` in the project root.
+3) Save the key as `google_service_account.json` in the project root (or upload via Web UI).
 4) Share the target Google Calendar with the service account email (permission: "Make changes to events").
 5) Set `.env`:
 
@@ -320,6 +320,26 @@ ENABLE_GOOGLE_CALENDAR=true
 GOOGLE_SERVICE_ACCOUNT_FILE=google_service_account.json
 GOOGLE_CALENDAR_ID=primary
 ```
+
+Calendar selection (Web UI):
+- Upload service account JSON in the Google Calendar section.
+- Click "Fetch calendars" to load available calendars.
+- Select a calendar from the dropdown — Calendar ID fills automatically.
+
+**Important:** Shared calendars don't appear automatically in the Service Account's calendar list.
+If "Fetch calendars" returns empty, add the calendar manually:
+
+```bash
+docker exec blackbin python -c "
+from integrations.google_calendar import GoogleCalendar
+gc = GoogleCalendar('/data/google_service_account.json')
+calendar_id = 'YOUR_CALENDAR_ID@group.calendar.google.com'
+gc.service.calendarList().insert(body={'id': calendar_id}).execute()
+print('Calendar added!')
+"
+```
+
+Get Calendar ID from Google Calendar → Settings → Integrate calendar.
 
 Optional test:
 
