@@ -16,4 +16,4 @@ google-api-python-client==2.111.0
 paho-mqtt==1.6.1
 
 # REST API
-flask==3.0.0
+flask==3.1.3
